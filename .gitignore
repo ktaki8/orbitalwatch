@@ -1,0 +1,16 @@
+# Raw orbital data: Space-Track's terms do not allow redistributing it.
+# Download your own copy with a free Space-Track account.
+data/
+*.tle
+*gp_history*
+tle*.txt
+
+# Synthetic test outputs (look real in screenshots; keep them out)
+results_synthetic/
+
+# Secrets and local environment
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc

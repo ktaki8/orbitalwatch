@@ -1,0 +1,233 @@
+\documentclass[11pt]{article}
+
+% ======================================================================
+% OrbitalWatch: An Open-Source Framework for Detecting Anomalous Satellite
+% Behavior and Cyber-Physical Risk Signals from Public Orbital Data
+% Author: Khadija (Kadi) Taki
+% Draft status: STRUCTURED DRAFT. Framing and methods are written.
+% Results/tables/figures are marked [PENDING ANALYSIS] and must not be
+% filled with invented numbers. Populate after you run the analysis.
+% ======================================================================
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{authblk}
+
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
+
+\newcommand{\pending}[1]{\textcolor{red}{\textbf{[PENDING ANALYSIS: #1]}}}
+\newcommand{\fill}[1]{\textcolor{orange}{\textbf{[FILL: #1]}}}
+
+\title{OrbitalWatch: An Open-Source Framework for Detecting Anomalous\\
+Satellite Behavior and Cyber-Physical Risk Signals from Public Orbital Data}
+\author[1]{Khadija Taki}
+\affil[1]{Heinz College of Information Systems and Public Policy, Carnegie Mellon University\\ \texttt{\fill{preferred contact email}}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Public orbital tracking data, distributed as two-line element sets (TLEs),
+provides a continuously updated, openly available record of the motion of
+thousands of satellites. This paper asks whether that public data can be used to
+detect statistically unusual satellite behavior that warrants further
+cyber-physical investigation. We present OrbitalWatch, an open-source framework
+that ingests public TLE data, derives per-satellite behavioral features
+(inclination, eccentricity, mean motion, altitude, maneuver frequency, and
+proximity to other objects), and applies a layered set of statistical anomaly
+detection methods to flag deviations from each satellite's own historical
+baseline and from its peer category. We are explicit about what such a signal
+does and does not mean: an orbital anomaly is a cyber-physical risk signal
+requiring corroboration, not proof of a cyberattack. We describe the data
+pipeline, the detection methods, and a sensitivity and false-positive analysis
+protocol, and we release the dataset, code, and visualizations to support
+reproduction. \pending{quantitative findings, once the analysis is run}
+\end{abstract}
+
+\section{Introduction}
+
+The space domain is now critical infrastructure. Communications, navigation,
+Earth observation, and defense all depend on satellites whose behavior is, in
+principle, observable from the ground. Two-line element sets, published for a
+large fraction of tracked objects, encode each satellite's orbit compactly
+enough to be analyzed at scale. If meaningful behavioral anomalies can be
+extracted from this public record, then open data becomes a usable input to
+space situational awareness and to the governance of space-based systems.
+
+The central research question of this paper is deliberately narrow and testable:
+
+\begin{quote}
+\emph{Can public orbital data be used to detect statistically unusual satellite
+behavior that warrants further cyber-physical investigation?}
+\end{quote}
+
+The framing matters. We are not claiming that an anomaly proves hostile action.
+Orbital anomalies have many benign explanations: routine station-keeping,
+collision avoidance, end-of-life disposal, or noise in the underlying tracking
+data. Our claim is weaker and more defensible: that certain deviations, relative
+to a satellite's own history and to its peer category, are statistically unusual
+enough to justify corroboration from other sources. That methodological
+restraint is what makes the work credible.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=*]
+  \item An open pipeline that turns public TLE data into per-satellite
+        behavioral time series (Section~\ref{sec:data}).
+  \item A layered anomaly-detection methodology combining classical statistical
+        baselines with an unsupervised detector (Section~\ref{sec:methods}).
+  \item A sensitivity and false-positive analysis protocol appropriate to a
+        domain with no ground-truth labels (Section~\ref{sec:eval}).
+  \item A released dataset, code, and set of visualizations enabling
+        reproduction (Section~\ref{sec:artifacts}).
+\end{enumerate}
+
+\section{Related Work}
+\fill{2 to 3 paragraphs situating this against space situational awareness,
+prior TLE-based analyses, and anomaly detection in astrodynamics. Add real
+references to the .bib. Note honestly where OrbitalWatch differs: openness,
+reproducibility, and the cyber-physical framing rather than pure astrodynamics.}
+
+\section{Data}
+\label{sec:data}
+
+\subsection{Source and scope}
+We collect public TLE data for \pending{number} satellites over an observation
+window of \pending{start date to end date}. Satellites are grouped into
+functional categories, communications, navigation, Earth observation, and
+defense-related, so that anomalies can be judged both against a satellite's own
+history and against its category peers.
+
+\subsection{Derived features}
+From successive TLEs we derive the following per-satellite features:
+\begin{itemize}[leftmargin=*]
+  \item Changes in inclination
+  \item Changes in eccentricity
+  \item Changes in mean motion
+  \item Unexpected altitude changes
+  \item Unusual proximity between space objects
+  \item Maneuver frequency
+  \item Deviations from each satellite's historical behavior
+  \item Differences across the communications, navigation, Earth-observation,
+        and defense-related categories
+\end{itemize}
+
+\subsection{Preprocessing}
+\fill{Describe cleaning: handling of missing or duplicate TLEs, epoch alignment,
+outlier handling in the raw elements, and any smoothing. State the final
+per-satellite series length.}
+
+\section{Methods}
+\label{sec:methods}
+
+OrbitalWatch layers several detectors so that no single method carries the
+finding alone. Simple, interpretable baselines run first; an unsupervised
+detector adds sensitivity to multivariate patterns.
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Rolling averages and standard deviations} establish each
+        satellite's own moving baseline.
+  \item \textbf{Robust Z-scores} flag deviations while resisting the influence
+        of extreme single points.
+  \item \textbf{Median absolute deviation (MAD)} provides a robust dispersion
+        measure for skewed or heavy-tailed features.
+  \item \textbf{Change-point detection} identifies shifts in a satellite's
+        behavioral regime rather than isolated spikes.
+  \item \textbf{Isolation Forest} provides unsupervised multivariate anomaly
+        scoring across the derived features~\cite{iforest}.
+  \item \textbf{Time-series visualization} supports human review of any flagged
+        satellite.
+\end{itemize}
+
+\fill{For each method, state the exact parameters used (window sizes, Z-score and
+MAD thresholds, change-point penalty, Isolation Forest contamination and
+estimators). Reproducibility depends on these being written down.}
+
+\section{Evaluation Protocol}
+\label{sec:eval}
+
+Because there is no public ground truth for ``a satellite that was actually
+interfered with,'' we cannot report conventional precision and recall against
+labels. Instead we evaluate along axes appropriate to an unlabeled,
+high-consequence domain:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Sensitivity analysis:} how flagged counts change as thresholds
+        vary, reported as a curve rather than a single operating point.
+  \item \textbf{False-positive analysis:} manual review of a sample of flags
+        against known benign causes (station-keeping, disposal, avoidance).
+  \item \textbf{Cross-method agreement:} whether independent detectors flag the
+        same satellite-windows, as a proxy for robustness.
+  \item \textbf{Category baselining:} whether flags concentrate in categories in
+        a way consistent with known operational behavior.
+\end{itemize}
+
+\section{Results}
+\pending{This entire section awaits your analysis run. Do not populate with
+placeholder numbers. Suggested structure once results exist: (1) overall flag
+counts and rates by method; (2) sensitivity curves; (3) cross-method agreement;
+(4) a small number of illustrative flagged cases with the explicit caveat that
+each requires corroboration.}
+
+\begin{table}[h]
+\centering
+\caption{Anomaly flags by detector and category. \pending{populate}}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Category} & \textbf{Robust Z} & \textbf{Change-point} & \textbf{Isolation Forest} \\
+\midrule
+Communications & \pending{} & \pending{} & \pending{} \\
+Navigation & \pending{} & \pending{} & \pending{} \\
+Earth observation & \pending{} & \pending{} & \pending{} \\
+Defense-related & \pending{} & \pending{} & \pending{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion: Interpreting an Orbital Anomaly}
+
+We restate the central methodological point because it governs how any result
+here should be read. An orbital anomaly does not prove a cyberattack. It is a
+cyber-physical risk signal requiring corroboration. A responsible use of
+OrbitalWatch treats a flag as a prompt to gather additional evidence, not as an
+attribution. This restraint is not a weakness of the framework; it is the
+condition under which open-source orbital analysis can contribute to governance
+without producing false accusations.
+
+\section{Released Artifacts}
+\label{sec:artifacts}
+\fill{List the released dataset, the code repository URL, the figures, and the
+two-page policy brief. A persistent link (for example a Zenodo DOI) strengthens
+this considerably for a writing sample.}
+
+\section{Limitations}
+TLE data is itself imperfect: it is a fitted approximation, updated at irregular
+cadence, and subject to its own errors. Absence of a flag does not mean absence
+of activity, and presence of a flag has many benign explanations. The framework
+detects statistical unusualness, not intent.
+
+\section{Conclusion}
+OrbitalWatch tests whether openly available orbital data can surface
+statistically unusual satellite behavior worth further investigation, and
+packages the result as reproducible open science. Its contribution to governance
+is a disciplined, corroboration-first way to use public data as an input to
+space situational awareness. \pending{one closing sentence stating the empirical
+finding, once known}
+
+\begin{thebibliography}{9}
+\bibitem{iforest}
+F.~T. Liu, K.~M. Ting, and Z.-H. Zhou,
+``Isolation Forest,''
+\emph{2008 Eighth IEEE International Conference on Data Mining}, 2008, pp.\ 413--422.
+% \fill{Add: TLE / space-track data source citation, space situational awareness
+% references, change-point and robust-statistics references you rely on.}
+\end{thebibliography}
+
+\end{document}
