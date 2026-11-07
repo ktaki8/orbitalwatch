@@ -24,6 +24,7 @@ Full write-up, figures and limits: [`findings/kosmos2612.md`](findings/kosmos261
 | Part | State |
 | --- | --- |
 | Kosmos 2612 / ICEYE-X36 findings | Published here (preliminary) |
+| Concept note | [`docs/OrbitalWatch-Concept-Note.pdf`](docs/OrbitalWatch-Concept-Note.pdf) |
 | Paper draft | [`paper/orbitalwatch.tex`](paper/orbitalwatch.tex), methods written, results in progress |
 | Detection pipeline (TLE ingestion, SGP4 propagation, maneuver detection, relative-motion phases, anomaly scoring, explainable classifier, MITRE ATT&CK mapping, dashboard) | Being restored to this repository |
 
